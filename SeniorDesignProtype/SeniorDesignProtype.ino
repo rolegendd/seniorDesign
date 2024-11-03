@@ -45,12 +45,16 @@
 
 
 
-MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
+MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance//
+
+/// Represents cards in the system/database /// 
 byte accessUID[][4] = {{0X13, 0x9C, 0x34, 0x16},
                        {0xF3, 0xA3, 0x45, 0x1A},
                        {0x24, 0x96, 0x2E, 0x30},
                        //{0x96, 0xB3, 0x2A, 0x30}
                        };
+
+/// The way to get the amount of items in an array in C/C++ in order to use in a loop. ///
 const int numOfIds = sizeof(accessUID)/sizeof(accessUID[0]);
 
 
@@ -76,23 +80,17 @@ void loop() {
 		return;
 	}
 
-	// Dump debug info about the card; PICC_HaltA() is automatically called
- //  if(mfrc522.uid.uidByte[0] == accessUID[][0] && mfrc522.uid.uidByte[][1] == accessUID[][1] && mfrc522.uid.uidByte[][2] == accessUID[][2] && mfrc522.uid.uidByte[][3] == accessUID[][3]){
-// if(inDataBase(mfrc522.uid.uidByte, mfrc522.uid.size)){
-//        Serial.println("Access Granted");
-//    } else{
-//       Serial.println("Access Denied");
-//    }
+/// This portion of the code checks to see if the RFID is within the system accessUID ///	
    bool accessGranted = false;
-   for(int row = 0; row < numOfIds; row++){
-    accessGranted = true;
-    for(byte byte = 0; byte < mfrc522.uid.size; byte++){
-      if(mfrc522.uid.uidByte[byte] != accessUID[row][byte]){
-        accessGranted = false;
+   for(int row = 0; row < numOfIds; row++){                   /// Checks by each row ///
+    accessGranted = true;                 
+    for(byte byte = 0; byte < mfrc522.uid.size; byte++){     /// Checks byte by byte ///
+      if(mfrc522.uid.uidByte[byte] != accessUID[row][byte]){ /// If a byte is not correct then it is not in the system, 
+        accessGranted = false;                               /// then breaks out of the inner loop. ///
         break;
       }
     }
-    if(accessGranted){
+    if(accessGranted){                                       /// evaluates the status of accessGranted and prints accordingly ///
       Serial.println("Access Granted"); break;
     }
    }
@@ -103,16 +101,3 @@ void loop() {
 
 }
 
-//bool inDataBase(byte *uid, byte uidSize){
- // for (int parser = 0; parser < numOfIds; parser++){
-   // bool match = true;
-    //for(byte parser2 = 0; parser2 < uidSize; parser2){
-      //match = false;
-      //break;
-    //}
-    //if(match){
-      //return true;
-    //}
-  //}
-  //return false;
-//}
