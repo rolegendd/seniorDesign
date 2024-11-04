@@ -37,9 +37,17 @@
 
 #include <SPI.h>
 #include <MFRC522.h>
+#include <ESP8266WiFi.h>
+
+
+const char* ssid = "Pixel spot"; /// Testing hotspot ///
+const char* password = "hola1234"; /// Testing password ///
+
 
 #define RST_PIN         D0          // Configurable, see typical pin layout above
 #define SS_PIN          D8         // Configurable, see typical pin layout above
+
+
 
 
 
@@ -60,13 +68,25 @@ const int numOfIds = sizeof(accessUID)/sizeof(accessUID[0]);
 
 
 void setup() {
-	Serial.begin(9600);		// Initialize serial communications with the PC
+	Serial.begin(115200);		// Initialize serial communications with the PC
 	while (!Serial);		// Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
 	SPI.begin();			// Init SPI bus
 	mfrc522.PCD_Init();		// Init MFRC522
 	delay(4);				// Optional delay. Some board do need more time after init to be ready, see Readme
 	mfrc522.PCD_DumpVersionToSerial();	// Show details of PCD - MFRC522 Card Reader details
-	Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
+	
+
+  WiFi.begin(ssid,password);
+
+  while(WiFi.status() != WL_CONNECTED){
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.print("NodeMCU IP Address: ");
+  Serial.println(WiFi.localIP());
+  Serial.println(F("Present card/tag..."));
+  
 }
 
 void loop() {
@@ -91,7 +111,10 @@ void loop() {
       }
     }
     if(accessGranted){                                       /// evaluates the status of accessGranted and prints accordingly ///
-      Serial.println("Access Granted"); break;
+      Serial.print("ID Detected: "); 
+      printIDhex(mfrc522.uid.uidByte, mfrc522.uid.size);
+      Serial.println();
+      break;
     }
    }
    if(!accessGranted){
@@ -101,3 +124,9 @@ void loop() {
 
 }
 
+void printIDhex(byte *buffer, byte bufferSize){
+  for(byte parse = 0; parse < bufferSize; parse++){
+    Serial.print(buffer[parse] < 0x10 ? " 0" : " ");
+    Serial.print(buffer[parse], HEX);
+  }
+}
