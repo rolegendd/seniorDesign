@@ -42,8 +42,8 @@
 #include "Adafruit_MQTT_Client.h"
 #include "config.h"
 
-const char* ssid = "Pixel spot"; /// Testing hotspot ///
-const char* password = "hola1234"; /// Testing password ///
+const char* ssid = "hot"; /// Testing hotspot ///
+const char* password = "1234"; /// Testing password ///
 
 
 #define RST_PIN         D0          // Configurable, see typical pin layout above
@@ -55,7 +55,7 @@ const char* password = "hola1234"; /// Testing password ///
 #define AIO_SEVERPORT   1883
 /// Adafruit Account info ///
 #define AIO_USERNAME  "SeniorDesignProject3"
-#define AIO_KEY       "aio_jAaf54uYJ1T3X3Gv0BS6uIsSBRq7"
+#define AIO_KEY       ""
 
 WiFiClient client;
 /// MQTT Setup ///
