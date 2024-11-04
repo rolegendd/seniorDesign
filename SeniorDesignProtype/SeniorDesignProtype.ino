@@ -38,7 +38,9 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <ESP8266WiFi.h>
-
+#include "Adafruit_MQTT.h"
+#include "Adafruit_MQTT_Client.h"
+#include "config.h"
 
 const char* ssid = "Pixel spot"; /// Testing hotspot ///
 const char* password = "hola1234"; /// Testing password ///
@@ -48,9 +50,17 @@ const char* password = "hola1234"; /// Testing password ///
 #define SS_PIN          D8         // Configurable, see typical pin layout above
 
 
+/// Adafruit IO ///
+#define AIO_Sever       "io.adafruit.com"
+#define AIO_SEVERPORT   1883
+/// Adafruit Account info ///
+#define AIO_USERNAME  "SeniorDesignProject3"
+#define AIO_KEY       "aio_jAaf54uYJ1T3X3Gv0BS6uIsSBRq7"
 
-
-
+WiFiClient client;
+/// MQTT Setup ///
+Adafruit_MQTT_Client mqtt(&client, AIO_Sever, AIO_SEVERPORT, AIO_USERNAME, AIO_KEY);
+Adafruit_MQTT_Publish Attendance = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Attendance");
 
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance//
@@ -86,10 +96,28 @@ void setup() {
   Serial.print("NodeMCU IP Address: ");
   Serial.println(WiFi.localIP());
   Serial.println(F("Present card/tag..."));
+
+  /// Connect to the server ///
+  connect();
+
+
   
 }
 
 void loop() {
+
+  /// Ping Server ///
+
+  if(! mqtt.ping(3)){
+
+    // reconnect to sever ///
+    if(! mqtt.connected())
+      connect();
+    
+  }
+
+  
+
 	// Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
 	if ( ! mfrc522.PICC_IsNewCardPresent()) {
 		return;
@@ -129,4 +157,28 @@ void printIDhex(byte *buffer, byte bufferSize){
     Serial.print(buffer[parse] < 0x10 ? " 0" : " ");
     Serial.print(buffer[parse], HEX);
   }
+}
+
+// connect to adafruit io via MQTT
+void connect() {
+  Serial.print(F("Connecting to Adafruit IO... "));
+  int8_t ret;
+  while ((ret = mqtt.connect()) != 0) {
+    switch (ret) {
+      case 1: Serial.println(F("Wrong protocol")); break;
+      case 2: Serial.println(F("ID rejected")); break;
+      case 3: Serial.println(F("Server unavail")); break;
+      case 4: Serial.println(F("Bad user/pass")); break;
+      case 5: Serial.println(F("Not authed")); break;
+      case 6: Serial.println(F("Failed to subscribe")); break;
+      default: Serial.println(F("Connection failed")); break;
+    }
+
+    if(ret >= 0)
+      mqtt.disconnect();
+
+    Serial.println(F("Retrying connection..."));
+    delay(10000);
+  }
+  Serial.println(F("Adafruit IO Connected!"));
 }
