@@ -47,7 +47,7 @@ import serial
 import binascii
 import time
 import socket 
-
+import RPi.GPIO as GPIO 
 
 # For the next portion of code I had to refer the the documentation for pySerial and the YANZEO SR681
 # The documentation stated that the baudrate, parity, stopbits, and bytesize were all user choice configurations
@@ -62,7 +62,8 @@ import socket
 # but I decided to still declare them within the code.
 # I am also testing this on Ubuntu 24.04.
 
-ser = serial.Serial(
+# Ser1 is for the Yanzeo SR681 Scanner 
+ser1 = serial.Serial(
     port='/dev/ttyACM0',                                                                    ## Opens serial port
     baudrate=115200,                                                                        ## Sets baudrate 
     parity=serial.PARITY_NONE,                                                              ## Sets parity
@@ -70,33 +71,107 @@ ser = serial.Serial(
     bytesize=serial.EIGHTBITS,                                                              ## Sets bytesize
     timeout=1                                                                               ## Declares timeout 
 )
+
+# Ser2 is for the Waveshare 4G/GPS hat  
+ser2 = serial.Serial('/dev/ttyUSB4',115200)
+ser2.flushInput()
+
+power_key = 6
+rec_buff = ''
+rec_buff2 = ''
+time_count = 0
+
+def send_at(command, back, timeout):
+    rec_buff = ' ' 
+    ser2.write((command+'\r\n').encode())
+    time.sleep(timeout)
+    if ser2.inWaiting()
+        time.sleep(0.01)
+        rec_buff = ser2.read(ser2.inWating())
+    if rec_buff != ' ':
+        if back not in rec_buff.decode():
+            print(command + ' ERROR')
+            print(command + ' back:\t' + rec_buff.decode())
+            return 0
+        else:            
+		
+			global GPSDATA
+
+			GPSDATA = str(rec_buff.decode()).replace('\n','').replace('\r','').replace('AT','').replace('+CGPSINFO','').replace(': ','')
+			Cleaned = GPSDATA
+			
+			#print(Cleaned)
+			
+			Lat = Cleaned[:2]
+			SmallLat = Cleaned[2:11]
+			NorthOrSouth = Cleaned[12]
+			
+			#print(Lat, SmallLat, NorthOrSouth)
+			
+			Long = Cleaned[14:17]
+			SmallLong = Cleaned[17:26]
+			EastOrWest = Cleaned[27]
+			
+			#print(Long, SmallLong, EastOrWest)   
+			FinalLat = float(Lat) + (float(SmallLat)/60)
+			FinalLong = float(Long) + (float(SmallLong)/60)
+			
+			if NorthOrSouth == 'S': FinalLat = -FinalLat
+			if EastOrWest == 'W': FinalLong = -FinalLong
+			
+			print(FinalLat, FinalLong)
+			
+			#print(FinalLat, FinalLong)
+			#print(rec_buff.decode())
+			
+			return 1
+    else:
+        print('GPS is not ready')
+        return 0 
+
+
+# Def for GPS positions
+def get_gps_position():
+	rec_null = True
+	answer = 0
+	print('Start GPS session...')
+	rec_buff = ''
+	send_at('AT+CGPS=1,1','OK',1)
+	time.sleep(2)
+	while rec_null:
+		answer = send_at('AT+CGPSINFO','+CGPSINFO: ',1)
+		if 1 == answer:
+			answer = 0
+			if ',,,,,,' in rec_buff:
+				print('GPS is not ready')
+				rec_null = False
+				time.sleep(1)
+		else:
+			print('error %d'%answer)
+			rec_buff = ''
+			send_at('AT+CGPS=0','OK',1)
+			return False
+		time.sleep(1.5)
+
+
 # The following lines will establish the scanner system as a client to send the scan cards back to the server. 
 
 def startClient():
-
     # This line creates a socket object.
-    
     clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
     # The following line get is declaring the IP of the server host.
-
-    host = "127.0.1.1"
-
+    host = ""
     # The following line established what port we are sending data to.
-
     port = 9999
-
     # The following line establishes a connection to the sever.
-
     clientSocket.connect((host, port))
     # This sends the message to the server.
     clientSocket.send()
-
     clientSocket.close()
 
 
 
-print("Listening for RFID scans...")
+
 
 # The following Declares an the variable 'buffer' as a empyt byte string.
 
@@ -117,7 +192,7 @@ startMarker = b'\xe2'                                                           
 try:
     while True:
         startClient() 
-        data = ser.read(1)  # Read one byte at a time
+        data = ser1.read(1)  # Read one byte at a time
 
             # The follow lines of code will take in the data read from the serail port and append it to the buffer bit by bit and keep the lasts
             # 22 bits.
@@ -162,5 +237,5 @@ try:
 
 except KeyboardInterrupt:
     print("\nExiting...")
-    ser.close()
+    ser1.close()
 
