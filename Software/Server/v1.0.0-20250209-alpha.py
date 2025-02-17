@@ -43,7 +43,7 @@ def startServer():
 
     serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
-    host = socket.gethostbyname(socket.gethostname())
+    host = "100.81.26.99"
 
     port = 9999
 

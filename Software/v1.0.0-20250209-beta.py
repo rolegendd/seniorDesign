@@ -156,7 +156,7 @@ try:
                     client.send(extracted_data)
 
 
-                      buffer = b""                                                            ## Reset and Clear buffer for the next scan
+                    buffer = b""                                                            ## Reset and Clear buffer for the next scan
 
         time.sleep(0.01)                                                                    ## Small delay to prevent excessive CPU usage
 
