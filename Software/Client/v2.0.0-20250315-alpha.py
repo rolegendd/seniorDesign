@@ -56,7 +56,7 @@ def read_gps_data():
         data = ser.readline().decode('utf-8', errors='ignore').strip()
 
         if data.startswith('$GPGGA'):  # $GPGGA contains time & position information
-            parse_gpgga(data)
+           return parse_gpgga(data)
 
 # Def to parse through the raw GPS data 
 def parse_gpgga(data):
@@ -83,10 +83,12 @@ def parse_gpgga(data):
             if parts[3] == 'S': latitude = -latitude
             if parts[5] == 'W': longitude = -longitude
 
-            #print(f"{formatted_time} | {latitude}, {longitude}")
+            return f"{formatted_time} | {latitude}, {longitude}"
 
         except ValueError:
-            pass  
+            return None
+
+    return None 
 
 # Def for client 
 def start_client():
@@ -109,7 +111,7 @@ def start_client():
 # The follow lines of code is utilizing the pySerial library to implement the configurations,
     # Serial connection for the RFID attenna 
     ser = serial.Serial(
-        port='/dev/ttyACM1',                                                                    ## Opens serial port
+        port='/dev/ttyACM0',                                                                    ## Opens serial port
         baudrate=115200,                                                                        ## Sets baudrate 
         parity=serial.PARITY_NONE,                                                              ## Sets parity
         stopbits=serial.STOPBITS_ONE,                                                           ## Sets stopbit
