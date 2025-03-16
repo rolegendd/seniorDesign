@@ -47,6 +47,48 @@ import binascii
 import time
 import socket 
 
+# Def to read the GPS data from the receiver 
+def read_gps_data():
+    # Reads GPS data and extracts time, latitude & longitude from GPGGA sentences.
+    
+    while True: 
+
+        data = ser.readline().decode('utf-8', errors='ignore').strip()
+
+        if data.startswith('$GPGGA'):  # $GPGGA contains time & position information
+            parse_gpgga(data)
+
+# Def to parse through the raw GPS data 
+def parse_gpgga(data):
+
+    # Parses GPGGA sentence and prints time, latitude & longitude.
+    
+    parts = data.split(',')
+    if len(parts) >= 6 and parts[1] and parts[2] and parts[4]:
+        try:
+            # Extract and format time (HH:MM:SS UTC) from the raw GPS data from the receiver 
+            
+            # Example: "074353.00" → HHMMSS.ss
+
+            raw_time = parts[1]
+            hours = raw_time[:2]
+            minutes = raw_time[2:4]
+            seconds = raw_time[4:6]
+            formatted_time = f"{hours}:{minutes}:{seconds} UTC"
+
+            # Extract and convert latitude & longitude to decimal format
+            latitude = float(parts[2][:2]) + float(parts[2][2:]) / 60.0
+            longitude = float(parts[4][:3]) + float(parts[4][3:]) / 60.0
+
+            if parts[3] == 'S': latitude = -latitude
+            if parts[5] == 'W': longitude = -longitude
+
+            #print(f"{formatted_time} | {latitude}, {longitude}")
+
+        except ValueError:
+            pass  
+
+# Def for client 
 def start_client():
     
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -65,7 +107,7 @@ def start_client():
 # Bytesize = 8
 
 # The follow lines of code is utilizing the pySerial library to implement the configurations,
-
+    # Serial connection for the RFID attenna 
     ser = serial.Serial(
         port='/dev/ttyACM1',                                                                    ## Opens serial port
         baudrate=115200,                                                                        ## Sets baudrate 
@@ -76,6 +118,10 @@ def start_client():
         )
 
     print("Listening for RFID scans...")
+
+    # Serial connection for the GPS receiver 
+    ser1 = serial.Serial('/dev/ttyACM1', 115200)
+    ser1.flushInput()
 
 # by defult the pySerial library sets the parity,stopbits,bytesize to he suggested for the scanners
 # but I decided to still declare them within the code.
@@ -133,12 +179,17 @@ def start_client():
                     if startIndex + 24 <= len(hexData):  
                         extracted_data = hexData[startIndex:startIndex + 24]                    ## Extract full 24-char ID
                     
-                        print(f"Card Detected: {extracted_data}")
-                        print(f"Sending {extracted_data} to the Server")
-                        
+                        #print(f"Card Detected: {extracted_data}")
+                        #print(f"Sending {extracted_data} to the Server")
+            # GPS data retrieval 
+                        gps_data = read_gps_data()
             # Sending the ID to the server.
-                        client_socket.send(extracted_data.encode('utf-8'))
-                        client_socket.close()
+
+                    #Sending all data from client.
+
+                        transmission = f"RFID:{extracted_data} | GPS: {gps_data}"
+                        client_socket.sendall((transmission + "\n").encode('utf-8'))
+       
 
 
 
@@ -149,6 +200,8 @@ def start_client():
     except KeyboardInterrupt:
         print("\nExiting...")
         ser.close()
+        client_socket.close()
+
 
 while True: 
     start_client()
