@@ -47,6 +47,7 @@ import binascii
 import time
 
 
+    
 # For the next portion of code I had to refer the the documentation for pySerial and the YANZEO SR681
 # The documentation stated that the baudrate, parity, stopbits, and bytesize were all user choice configurations
 # recommend suggestion were:

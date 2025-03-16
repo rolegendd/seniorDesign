@@ -24,10 +24,10 @@ def start_client():
 
     client_socket.close()
 
-
-    for step in range(10):
-        start_client()
-        time.sleep(5)
+while True:
+    #for step in range(10):
+    start_client()
+    time.sleep(5)
 
 
     
