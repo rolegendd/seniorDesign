@@ -191,7 +191,7 @@ def start_client(scanner, gpsReceiver):
                 
                 if readable:
                     serverCommand = client_socket,recv(1024).decode('utf-8').strip()
-                    if serverCommand = "GET_LOCATION":
+                    if serverCommand == "GET_LOCATION":
                     gps_data = read_gps_data(gspReceiver)
                     
                     reply = f"LOCATION: {gps_data}"
