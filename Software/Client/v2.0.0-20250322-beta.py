@@ -206,7 +206,7 @@ def start_client(scanner, gpsReceiver):
                         newState = "onboard" if boardingState == "offboard" else "offboard"
 
                         #Updating the boarding state 
-                        tagState[rifd_data] = newState 
+                        tagState[rfid_data] = newState 
                         recent_tags[rfid_data] = now 
 
                         transmission = f"RFID:{rfid_data} | STATUS:{newState.upper()} | GPS: {gps_data}"
