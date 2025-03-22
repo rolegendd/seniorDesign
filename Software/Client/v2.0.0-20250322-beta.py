@@ -178,7 +178,9 @@ def start_client(scanner, gpsReceiver):
             client_socket.connect((host, port))
 
             recent_tags = {}
-            
+        
+            tagState = {}
+
             cooldown = 5
         
             while True:
@@ -199,14 +201,19 @@ def start_client(scanner, gpsReceiver):
                     last_detected = recent_tags.get(rfid_data, 0)
                     
                     if(now - last_detected) > cooldown:
+                        
+                        boardingState = tagState.get(rfid_data, "offboard")
+                        newState = "onboard" if boardingState == "offboard" else "offboard"
 
-                        transmission = f"RFID:{rfid_data} | GPS: {gps_data}"
+                        #Updating the boarding state 
+                        tagState[rifd_data] = newState 
+                        recent_tags[rfid_data] = now 
+
+                        transmission = f"RFID:{rfid_data} | STATUS:{newState.upper()} | GPS: {gps_data}"
                         client_socket.sendall((transmission + "\n").encode('utf-8'))
                     
                         print(f"Sending {transmission} to Server ")
                         
-                        recent_tags[rfid_data] = now 
-
 
                 time.sleep(0.01)                                                                    ## Small delay to prevent excessive CPU usage
 
