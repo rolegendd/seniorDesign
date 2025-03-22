@@ -176,6 +176,10 @@ def start_client(scanner, gpsReceiver):
         try: 
 
             client_socket.connect((host, port))
+
+            recent_tags = {}
+            
+            cooldown = 5
         
             while True:
 
@@ -189,11 +193,19 @@ def start_client(scanner, gpsReceiver):
             #Sending all data from client.
             
                 if rfid_data and gps_data:
-                
-                    transmission = f"RFID:{rfid_data} | GPS: {gps_data}"
-                    client_socket.sendall((transmission + "\n").encode('utf-8'))
                     
-                    print(f"Sending {transmission} to Server ")
+                    now = time.time()
+
+                    last_detected = recent_tags.get(rfid_data, 0)
+                    
+                    if(now - last_detected) > cooldown:
+
+                        transmission = f"RFID:{rfid_data} | GPS: {gps_data}"
+                        client_socket.sendall((transmission + "\n").encode('utf-8'))
+                    
+                        print(f"Sending {transmission} to Server ")
+                        
+                        recent_tags[rfid_data] = now 
 
 
                 time.sleep(0.01)                                                                    ## Small delay to prevent excessive CPU usage
