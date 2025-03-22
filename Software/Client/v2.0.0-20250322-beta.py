@@ -192,12 +192,12 @@ def start_client(scanner, gpsReceiver):
                 if readable:
                     serverCommand = client_socket,recv(1024).decode('utf-8').strip()
                     if serverCommand == "GET_LOCATION":
-                    gps_data = read_gps_data(gspReceiver)
+                        gps_data = read_gps_data(gspReceiver)
                     
-                    reply = f"LOCATION: {gps_data}"
+                        reply = f"LOCATION: {gps_data}"
                     
-                    client_socket.sendall((reply + "\n").encode('utf-8'))
-                    print(f"Sending location: {reply} to server") 
+                        client_socket.sendall((reply + "\n").encode('utf-8'))
+                        print(f"Sending location: {reply} to server") 
 
             # Gets rfid data from read_rfid def 
                 rfid_data = read_rfid(scanner)
