@@ -193,7 +193,7 @@ def start_client(scanner, gpsReceiver):
                     transmission = f"RFID:{rfid_data} | GPS: {gps_data}"
                     client_socket.sendall((transmission + "\n").encode('utf-8'))
                     
-                    print(f"Sending {trasmission} to Server ")
+                    print(f"Sending {transmission} to Server ")
 
 
                 time.sleep(0.01)                                                                    ## Small delay to prevent excessive CPU usage
