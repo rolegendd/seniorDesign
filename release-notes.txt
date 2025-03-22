@@ -1,0 +1,19 @@
+## v2.0.0-20250201 - aphla (Stable)
+
+** Communitcation Test** : This build if for testing the communicaton from the hardward device (Yanzeo SR681) to an pc using Ubuntu OS.
+
+### Current State 
+- Establishes communication with the scanner and a PC with a linux OS.
+- Script enables PC to print detected RFID Tags from the scanner to the minicom/terminal.
+
+### Know Issues 
+- In this current state the code detects only the current cards we attain. So card with a 
+  different RFID Tag hex number the scanner will detect it but it will not be printed to the screens.
+  Code must be adjusted to detect and print Tags with any ID #. (Portion of the code must be update to generalize detection 
+  for multi/general purpose use.)
+  
+  
+## v2.0.0-20250322 - beta 
+
+This current build on the client side handles all the communication as previous version. This update also send the GPS coords., Time , and ID detected to the server.
+

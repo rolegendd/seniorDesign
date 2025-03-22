@@ -46,7 +46,7 @@ import serial
 import binascii
 import time
 import socket 
-
+import select
 
 
 # Def to read the GPS data from the receiver 
@@ -182,8 +182,22 @@ def start_client(scanner, gpsReceiver):
             tagState = {}
 
             cooldown = 5
+            
+            print("Connected to server...")
         
             while True:
+
+                readable, _, _, = select.select([client_socket], [], [], 0.1)
+                
+                if readable:
+                    serverCommand = client_socket,recv(1024).decode('utf-8').strip()
+                    if serverCommand = "GET_LOCATION":
+                    gps_data = read_gps_data(gspReceiver)
+                    
+                    reply = f"LOCATION: {gps_data}"
+                    
+                    client_socket.sendall((reply + "\n").encode('utf-8'))
+                    print(f"Sending location: {reply} to server") 
 
             # Gets rfid data from read_rfid def 
                 rfid_data = read_rfid(scanner)
