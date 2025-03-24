@@ -165,82 +165,71 @@ def read_rfid( scanner, startMarker = b'\xe2', expectedLength = 12):
 
 
 # Def for client 
+
 def start_client(scanner, gpsReceiver):
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    host = "100.81.26.99"
+    port = 9999
 
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        client_socket.connect((host, port))
 
-        host = "100.81.26.99"
+        # Send HELLO BUS ID
+        bus_id = "Fish"
+        client_socket.sendall(f"HELLO BUS:{bus_id}\n".encode('utf-8'))
 
-        port = 9999
+        recent_tags = {}
+        tagState = {}
+        cooldown = 5
 
-        try: 
+        print("Connected to server...")
 
-            client_socket.connect((host, port))
-           
-            bus_id = "Fish"
-            
-            client_socket.sendall(f"HELLO BUS: {bus_id} \n".encode('utf-8'))
+        while True:
+            readable, _, _, = select.select([client_socket], [], [], 0.1)
 
-            recent_tags = {}
-        
-            tagState = {}
+            # Handle commands from server (PING / GET_LOCATION)
+            if readable:
+                serverCommand = client_socket.recv(1024).decode('utf-8').strip()
+                print(f"[CLIENT DEBUG] Received command: {serverCommand}")
 
-            cooldown = 5
-            
-            print("Connected to server...")
-        
-            while True:
+                if serverCommand == "PING":
+                    gps_data = read_gps_data(gpsReceiver)
+                    timestamp = time.strftime("%H:%M:%S")
+                    reply = f"PONG | {timestamp} | {gps_data}"
+                    client_socket.sendall((reply + "\n").encode('utf-8'))
+                    print(f"Responding to PING: {reply}")
 
-                readable, _, _, = select.select([client_socket], [], [], 0.1)
-                
-                if readable:
-                    serverCommand = client_socket,recv(1024).decode('utf-8').strip()
-                    if serverCommand == "GET_LOCATION":
-                        gps_data = read_gps_data(gspReceiver)
-                        timestamp = time.strftime("%H:%M:%S") 
-                        reply = f"PONG | {timestamp} | {gps_data}"
-                    
-                        client_socket.sendall((reply + "\n").encode('utf-8'))
-                        print(f"Sending location: {reply} to server") 
+                elif serverCommand == "GET_LOCATION":
+                    gps_data = read_gps_data(gpsReceiver)
+                    reply = f"LOCATION: {gps_data}"
+                    client_socket.sendall((reply + "\n").encode('utf-8'))
+                    print(f"Sending location: {reply} to server")
 
-            # Gets rfid data from read_rfid def 
-                rfid_data = read_rfid(scanner)
+            # RFID Scan & Send Logic
+            rfid_data = read_rfid(scanner)
+            gps_data = read_gps_data(gpsReceiver)
 
-            # GPS data retrieval 
-                gps_data = read_gps_data(gpsReceiver)
-            # Sending the ID to the server.
+            if rfid_data and gps_data:
+                now = time.time()
+                last_detected = recent_tags.get(rfid_data, 0)
 
-            #Sending all data from client.
-            
-                if rfid_data and gps_data:
-                    
-                    now = time.time()
+                if (now - last_detected) > cooldown:
+                    boardingState = tagState.get(rfid_data, "offboard")
+                    newState = "onboard" if boardingState == "offboard" else "offboard"
+                    tagState[rfid_data] = newState
+                    recent_tags[rfid_data] = now
 
-                    last_detected = recent_tags.get(rfid_data, 0)
-                    
-                    if(now - last_detected) > cooldown:
-                        
-                        boardingState = tagState.get(rfid_data, "offboard")
-                        newState = "onboard" if boardingState == "offboard" else "offboard"
+                    transmission = f"RFID:{rfid_data} | STATUS:{newState.upper()} | GPS: {gps_data}"
+                    client_socket.sendall((transmission + "\n").encode('utf-8'))
+                    print(f"Sending {transmission} to Server")
 
-                        #Updating the boarding state 
-                        tagState[rfid_data] = newState 
-                        recent_tags[rfid_data] = now 
+            time.sleep(0.01)  # Prevent CPU overload
 
-                        transmission = f"RFID:{rfid_data} | STATUS:{newState.upper()} | GPS: {gps_data}"
-                        client_socket.sendall((transmission + "\n").encode('utf-8'))
-                    
-                        print(f"Sending {transmission} to Server ")
-                        
-
-                time.sleep(0.01)                                                                    ## Small delay to prevent excessive CPU usage
-
-        except KeyboardInterrupt:
-            print("\nExiting...") 
-            scanner.close()
-            gpsReceiver.close()
-            client_socket.close()
-
+    except KeyboardInterrupt:
+        print("\nExiting...")
+        scanner.close()
+        gpsReceiver.close()
+        client_socket.close()
 
 
 
