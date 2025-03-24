@@ -166,6 +166,7 @@ def read_rfid( scanner, startMarker = b'\xe2', expectedLength = 12):
 
 # Def for client 
 
+
 def start_client(scanner, gpsReceiver):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = "100.81.26.99"
@@ -173,21 +174,17 @@ def start_client(scanner, gpsReceiver):
 
     try:
         client_socket.connect((host, port))
-
-        # Send HELLO BUS ID
         bus_id = "Fish"
         client_socket.sendall(f"HELLO BUS:{bus_id}\n".encode('utf-8'))
+        print("✅ Connected and registered as Fish")
 
         recent_tags = {}
-        tagState = {}
+        tag_state = {}
         cooldown = 5
         stop_event = threading.Event()
 
-        print("Connected to server...")
-
-
-        # --- Background thread for scanning ---
         def scan_loop():
+            print("[🧵 SCAN THREAD STARTED]")
             while not stop_event.is_set():
                 try:
                     rfid_data = read_rfid(scanner)
@@ -199,57 +196,40 @@ def start_client(scanner, gpsReceiver):
                         if (now - last_seen) > cooldown:
                             current_state = tag_state.get(rfid_data, "offboard")
                             new_state = "onboard" if current_state == "offboard" else "offboard"
-
                             tag_state[rfid_data] = new_state
                             recent_tags[rfid_data] = now
 
                             transmission = f"RFID:{rfid_data} | STATUS:{new_state.upper()} | GPS: {gps_data}"
-                            client_socket.sendall((transmission + "\n").encode('utf-8'))
+                            client_socket.sendall((transmission + '\n').encode('utf-8'))
                             print(f"📡 Sent: {transmission}")
                 except Exception as e:
-                    print(f"[Scanner Error] {e}")
+                    print(f"[SCAN ERROR] {e}")
+                time.sleep(0.1)
 
-                time.sleep(0.01)
-
-
-        # Start scanning in a background thread
         threading.Thread(target=scan_loop, daemon=True).start()
 
-
-
-        # --- Main loop: handle server commands ---
         while True:
             readable, _, _ = select.select([client_socket], [], [], 0.1)
             if readable:
                 server_command = client_socket.recv(1024).decode('utf-8').strip()
-                print(f"[CLIENT DEBUG] Received command: {server_command}")
-
                 if server_command == "PING":
-                    try:
-                        gps_data = read_gps_data(gpsReceiver)
-                        timestamp = time.strftime("%H:%M:%S")
-                        response = f"PONG | {timestamp} | {gps_data}"
-                        client_socket.sendall((response + "\n").encode('utf-8'))
-                        print(f"✅ Responded to PING: {response}")
-                    except Exception as e:
-                        print(f"[PING ERROR] {e}")
-
+                    gps_data = read_gps_data(gpsReceiver)
+                    timestamp = time.strftime("%H:%M:%S")
+                    response = f"PONG | {timestamp} | {gps_data}"
+                    client_socket.sendall((response + "\n").encode('utf-8'))
+                    print(f"🛰️ Responded to PING: {response}")
                 elif server_command == "GET_LOCATION":
-                    try:
-                        gps_data = read_gps_data(gpsReceiver)
-                        response = f"LOCATION: {gps_data}"
-                        client_socket.sendall((response + "\n").encode('utf-8'))
-                        print(f"📍 Sent location: {response}")
-                    except Exception as e:
-                        print(f"[GET_LOCATION ERROR] {e}")
-
+                    gps_data = read_gps_data(gpsReceiver)
+                    response = f"LOCATION: {gps_data}"
+                    client_socket.sendall((response + "\n").encode('utf-8'))
+                    print(f"📍 Sent location: {response}")
 
     except KeyboardInterrupt:
-        print("\nExiting...")
+        stop_event.set()
+        print("🛑 Client exiting...")
         scanner.close()
         gpsReceiver.close()
         client_socket.close()
-
 
 
 ### Main ###
