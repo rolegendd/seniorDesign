@@ -189,6 +189,7 @@ def start_client(scanner, gpsReceiver):
 
             # Handle commands from server (PING / GET_LOCATION)
             if readable:
+                print("[DEBUG] Checking for server commands...")
                 serverCommand = client_socket.recv(1024).decode('utf-8').strip()
                 print(f"[CLIENT DEBUG] Received command: {serverCommand}")
 
