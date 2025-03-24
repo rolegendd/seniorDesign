@@ -47,7 +47,7 @@ import binascii
 import time
 import socket 
 import select
-
+import threading
 
 # Def to read the GPS data from the receiver 
 def read_gps_data(gpsReceiver):
@@ -181,50 +181,68 @@ def start_client(scanner, gpsReceiver):
         recent_tags = {}
         tagState = {}
         cooldown = 5
+        stop_event = threading.Event()
 
         print("Connected to server...")
 
+
+        # --- Background thread for scanning ---
+        def scan_loop():
+            while not stop_event.is_set():
+                try:
+                    rfid_data = read_rfid(scanner)
+                    gps_data = read_gps_data(gpsReceiver)
+                    now = time.time()
+
+                    if rfid_data and gps_data:
+                        last_seen = recent_tags.get(rfid_data, 0)
+                        if (now - last_seen) > cooldown:
+                            current_state = tag_state.get(rfid_data, "offboard")
+                            new_state = "onboard" if current_state == "offboard" else "offboard"
+
+                            tag_state[rfid_data] = new_state
+                            recent_tags[rfid_data] = now
+
+                            transmission = f"RFID:{rfid_data} | STATUS:{new_state.upper()} | GPS: {gps_data}"
+                            client_socket.sendall((transmission + "\n").encode('utf-8'))
+                            print(f"📡 Sent: {transmission}")
+                except Exception as e:
+                    print(f"[Scanner Error] {e}")
+
+                time.sleep(0.01)
+
+
+        # Start scanning in a background thread
+        threading.Thread(target=scan_loop, daemon=True).start()
+
+
+
+        # --- Main loop: handle server commands ---
         while True:
-            readable, _, _, = select.select([client_socket], [], [], 0.1)
-
-            # Handle commands from server (PING / GET_LOCATION)
+            readable, _, _ = select.select([client_socket], [], [], 0.1)
             if readable:
-                print("[DEBUG] Checking for server commands...")
-                serverCommand = client_socket.recv(1024).decode('utf-8').strip()
-                print(f"[CLIENT DEBUG] Received command: {serverCommand}")
+                server_command = client_socket.recv(1024).decode('utf-8').strip()
+                print(f"[CLIENT DEBUG] Received command: {server_command}")
 
-                if serverCommand == "PING":
-                    gps_data = read_gps_data(gpsReceiver)
-                    timestamp = time.strftime("%H:%M:%S")
-                    reply = f"PONG | {timestamp} | {gps_data}"
-                    client_socket.sendall((reply + "\n").encode('utf-8'))
-                    print(f"Responding to PING: {reply}")
+                if server_command == "PING":
+                    try:
+                        gps_data = read_gps_data(gpsReceiver)
+                        timestamp = time.strftime("%H:%M:%S")
+                        response = f"PONG | {timestamp} | {gps_data}"
+                        client_socket.sendall((response + "\n").encode('utf-8'))
+                        print(f"✅ Responded to PING: {response}")
+                    except Exception as e:
+                        print(f"[PING ERROR] {e}")
 
-                elif serverCommand == "GET_LOCATION":
-                    gps_data = read_gps_data(gpsReceiver)
-                    reply = f"LOCATION: {gps_data}"
-                    client_socket.sendall((reply + "\n").encode('utf-8'))
-                    print(f"Sending location: {reply} to server")
+                elif server_command == "GET_LOCATION":
+                    try:
+                        gps_data = read_gps_data(gpsReceiver)
+                        response = f"LOCATION: {gps_data}"
+                        client_socket.sendall((response + "\n").encode('utf-8'))
+                        print(f"📍 Sent location: {response}")
+                    except Exception as e:
+                        print(f"[GET_LOCATION ERROR] {e}")
 
-            # RFID Scan & Send Logic
-            rfid_data = read_rfid(scanner)
-            gps_data = read_gps_data(gpsReceiver)
-
-            if rfid_data and gps_data:
-                now = time.time()
-                last_detected = recent_tags.get(rfid_data, 0)
-
-                if (now - last_detected) > cooldown:
-                    boardingState = tagState.get(rfid_data, "offboard")
-                    newState = "onboard" if boardingState == "offboard" else "offboard"
-                    tagState[rfid_data] = newState
-                    recent_tags[rfid_data] = now
-
-                    transmission = f"RFID:{rfid_data} | STATUS:{newState.upper()} | GPS: {gps_data}"
-                    client_socket.sendall((transmission + "\n").encode('utf-8'))
-                    print(f"Sending {transmission} to Server")
-
-            time.sleep(0.01)  # Prevent CPU overload
 
     except KeyboardInterrupt:
         print("\nExiting...")
