@@ -23,7 +23,7 @@ def connect():
     return pymysql.connect(
         host="localhost",
         user="root",
-        password="tigapups2/",
+        password="YOUR PASSWORD",
         database="SchoolDB"
     )
 
@@ -93,9 +93,9 @@ def handle_client(client_socket, addr):
 def start_server_thread():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind(("100.81.26.99", 9999))
+    server_socket.bind(("YOUR IP", 9999))
     server_socket.listen(5)
-    server_logs.put("🟢 Server listening on 100.81.26.99:9999")
+    server_logs.put("🟢 Server listening on YOUR IP:9999")
 
     while True:
         client_socket, addr = server_socket.accept()
