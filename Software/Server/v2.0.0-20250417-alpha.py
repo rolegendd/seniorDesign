@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# -----------------------------------------------------------------------------
+# Project: Automated School Bus 
+# Author(s): Madison Lee, Kenrick Williams, Roland Simmons 
+# Institution: UNIVERSITY OF LOUISIANA AT LAFAYETTE 
+# Course: Senior Design (EECE 460)
+# Instructor: Dr. Paul Darby 
+# Date: February 1, 2025
 
 import curses
 import threading
