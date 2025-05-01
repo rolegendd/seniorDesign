@@ -1,4 +1,4 @@
-Welcome to the My senior design project — a Senior Design initiative from the University of Louisiana at Lafayette. This system automates student bus attendance using RFID scanning, GPS tracking, and secure client-server communication to improve student safety and operational efficiency for school transportation.
+Welcome to the My senior design project a Senior Design from the University of Louisiana at Lafayette. This system automates student bus attendance using RFID scanning, GPS tracking, and secure client-server communication to improve student safety and operational efficiency for school transportation.
 
 
 
