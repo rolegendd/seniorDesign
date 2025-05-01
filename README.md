@@ -30,6 +30,19 @@ Provide a foundation for future parent and admin access portals
 
 ⏱️ Debounce Logic to Prevent Duplicate Reads
 
+
+📦 Project Structure
+
+SmartBus/
+├── Client/                # Raspberry Pi client-side code
+│   └── rfid_gps_sender.py
+├── Server/                # Python server for data handling and logging
+│   └── main_server.py
+├── Database/              # MySQL schema and utility scripts
+├── Docs/                  # Design documents and setup instructions
+└── README.md              # This file
+
+
 👨‍💻 Authors
 
 Roland Simmons
