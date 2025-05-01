@@ -31,6 +31,7 @@ Provide a foundation for future parent and admin access portals
 ⏱️ Debounce Logic to Prevent Duplicate Reads
 
 👨‍💻 Authors
+
 Roland Simmons
 
 Madison Lee
