@@ -29,3 +29,10 @@ Provide a foundation for future parent and admin access portals
 🔒 Secure Networking with Tailscale VPN
 
 ⏱️ Debounce Logic to Prevent Duplicate Reads
+
+👨‍💻 Authors
+Roland Simmons
+
+Madison Lee
+
+Kenrick Williams
