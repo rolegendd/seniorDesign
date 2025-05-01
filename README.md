@@ -34,12 +34,19 @@ Provide a foundation for future parent and admin access portals
 📦 Project Structure
 
 SmartBus/
+
 ├── Client/                # Raspberry Pi client-side code
-│   └── rfid_gps_sender.py
+
+│   └── v3.0.0-20250324-alpha.py
+
 ├── Server/                # Python server for data handling and logging
-│   └── main_server.py
+
+│   └── v2.0.0-20250417-alpha.py
+
 ├── Database/              # MySQL schema and utility scripts
+
 ├── Docs/                  # Design documents and setup instructions
+
 └── README.md              # This file
 
 
