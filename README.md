@@ -30,10 +30,59 @@ Provide a foundation for future parent and admin access portals
 
 ⏱️ Debounce Logic to Prevent Duplicate Reads
 
+HARDWARE SYSYEM
+
+1) Client-side (on the bus)
+   
+Raspberry Pi (2)
+
+Runs the Python client
+
+Waveshare 4G HAT (SIM7600G)
+
+Plugs onto the Pi’s 40-pin header
+
+Requires a SIM card and a 4G LTE antenna
+
+Provides cellular Internet for your socket connection
+
+Yanzeo SR681 RFID Scanner
+
+USB → /dev/ttyACM0
+
+GPS Receiver Module (e.g. u-blox G70xx)
+
+USB → /dev/ttyACM1
+
+RFID Cards/Tags
+
+Power Supply for Pi (5 V, 2–3 A)
+
+2) Network Infrastructure
+   
+4G Cellular Network via the SIM7600G (no onboard Wi-Fi/Ethernet needed)
+
+4) Server-side (school office)
+   
+DELL Optilex 3010(Linux Server/Workstation)
+
+MySQL Database Server
+
+Terminal or Monitor for the curses UI
+
+Static IP or VPN so your Pi can always reach 100.81.26.99:9999
+
+4) Miscellaneous
+   
+USB cables and power cables
+
+Cellular and GPS antennas
+
+Enclosure/mounting hardware
 
 📦 Project Structure
 
-SmartBus/
+BusClient/
 
 ├── Client/                # Raspberry Pi client-side code
 
